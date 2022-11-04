@@ -7,9 +7,9 @@ const productsRoutes = Router();
 
 
 // Todas as rotas criadas no index.
-productsRoutes.post('/', productsController.index);
+productsRoutes.get('/', productsController.index);
 
-productsRoutes.get('/', productsController.store);
+productsRoutes.post('/', productsController.store);
 
 productsRoutes.put('/:id', productsController.update);
 

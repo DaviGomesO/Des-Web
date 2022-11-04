@@ -1,68 +1,75 @@
-import { v4 as uuidv4 } from 'uuid';
-
-const products = [];
+import Product from '../models/Products.js';
 
 export default {
-  index(request, response) {
+  async index(request, response) {
     const { category } = request.query;
-
-    const result = category
-      ? products.filter(products => products.category.includes(category))
-      : products;
   
-    return response.json(result);
+    try {
+      const result = category
+      ? await Product.find({"category": category})
+      : await Product.find();
+  
+      return response.json(result);
+    } catch (error) {
+      return response.status(500).json({ error });
+    }
   },
 
-  store(request, response) {
+  async store(request, response) {
     const { name, price, amount, category } = request.body;
-
+  
     const newProduct = {
-      id: uuidv4(),
       name,
       price,
       amount,
       category
     }
   
-    products.push(newProduct);
-  
-    return response.status(201).json(newProduct);
+    try {
+      const product = await Product.create(newProduct);
+      return response.status(201).json(product);
+    } catch (error) {
+      return response.status(500).json({ error });
+    }
   },
 
-  update(request, response) {
+  async update(request, response) {
     const { id } = request.params;
     const { name, price, amount, category } = request.body;
-  
-    const indexProduct = products.findIndex(p => p.id === id);
-  
-    if (indexProduct < 0) {
-      return response.status(400).json({ error: "Produto não encontrado." });
-    }
   
     const editedProduct = {
-      id,
       name,
       price,
       amount,
       category
     }
-  
-    products[indexProduct] = editedProduct;
-  
-    return response.json(editedProduct);
+    
+    try {
+      const productUpdateInformation = await Product.updateOne({_id: id}, editedProduct)
+      
+      if(productUpdateInformation.matchedCount === 0){
+        return response.status(404).json({ error: "Produto não encontrado." });
+      }
+      
+      return response.json(editedProduct);
+    } catch (error) {
+      return response.status(500).json({ error });
+    }
   },
 
-  destroy(request, response) {
+  async destroy(request, response) {
     const { id } = request.params;
-
-    const indexProduct = products.findIndex(p => p.id === id);
   
-    if (indexProduct < 0) {
-      return response.status(400).json({ error: "Produto não encontrado." })
+    try {
+      const productDeleteInformation = await Product.deleteOne({_id: id})
+  
+      if(productDeleteInformation.deletedCount === 0){
+        return response.status(404).json({ error: "Produto não encontrado." });
+      }
+      
+      return response.status(204).send();
+    } catch (error) {
+      return response.status(500).json({ error });
     }
-  
-    products.splice(indexProduct, 1);
-  
-    return response.status(204).send();
   }
 };
